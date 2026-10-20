@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>灵瞰 SkyLens · 遥感数据可视化看板</title>
+    <meta
+      name="description"
+      content="遥感影像处理、地物分类与指数分析的彩色数据看板 Demo"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <!-- 背景装饰：柔和光斑 + 网格 -->
+    <div class="bg-decor" aria-hidden="true">
+      <span class="blob blob-1"></span>
+      <span class="blob blob-2"></span>
+      <span class="blob blob-3"></span>
+      <span class="blob blob-4"></span>
+      <div class="grid-lines"></div>
+    </div>
+
+    <!-- ===================== 顶部导航 ===================== -->
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <div class="logo">
+          <span class="logo-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1" />
+            </svg>
+          </span>
+          <span>灵瞰 <span class="grad-text">SkyLens</span></span>
+        </div>
+        <nav class="nav-links">
+          <a href="#board" class="is-active">数据总览</a>
+          <a href="#raster">影像栅格</a>
+          <a href="#bands">光谱波段</a>
+          <a href="#tasks">采集任务</a>
+          <a href="#palette">配色令牌</a>
+        </nav>
+        <div class="nav-right">
+          <span class="live-dot"><i></i>数据同步中</span>
+          <button class="btn btn-primary btn-sm" id="btn">点我测试</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <!-- ===================== Hero ===================== -->
+      <section class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">◆ Vite + 原生 SVG · 零依赖可视化</span>
+          <h1>把遥感影像，<em>看清</em>也<em>看懂</em></h1>
+          <p class="hero-desc">
+            多源卫星影像接入、地物分类与植被指数一屏呈现。这里可以放遥感图表、地图与波段分析——
+            只用一个 HTML、一个 CSS、一个 JS，无需额外图表库。
+          </p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" id="cta">开始一段演示 ▶</button>
+            <button class="btn btn-ghost" id="refresh">刷新模拟数据 ↻</button>
+          </div>
+          <div class="hero-chips" id="heroChips"></div>
+        </div>
+
+        <div class="hero-art">
+          <!-- 卫星轨道插画 -->
+          <svg viewBox="0 0 420 340" role="img" aria-label="卫星轨道示意">
+            <defs>
+              <radialGradient id="earthG" cx="38%" cy="32%">
+                <stop offset="0%" stop-color="#7dd3fc" />
+                <stop offset="55%" stop-color="#0ea5e9" />
+                <stop offset="100%" stop-color="#1e3a8a" />
+              </radialGradient>
+              <linearGradient id="ringG" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#8b5cf6" />
+                <stop offset="50%" stop-color="#06b6d4" />
+                <stop offset="100%" stop-color="#ec4899" />
+              </linearGradient>
+              <linearGradient id="satG" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#f97316" />
+                <stop offset="100%" stop-color="#ec4899" />
+              </linearGradient>
+            </defs>
+
+            <!-- 光晕 -->
+            <circle cx="210" cy="170" r="112" fill="#6366f1" opacity="0.1" />
+
+            <!-- 轨道环 -->
+            <ellipse class="orbit-ring" cx="210" cy="170" rx="150" ry="58"
+              fill="none" stroke="url(#ringG)" stroke-width="2.5" stroke-dasharray="7 9" opacity="0.85" />
+            <ellipse class="orbit-ring-2" cx="210" cy="170" rx="126" ry="118"
+              fill="none" stroke="url(#ringG)" stroke-width="2" stroke-dasharray="4 10" opacity="0.5" />
+
+            <!-- 地球 -->
+            <circle cx="210" cy="170" r="82" fill="url(#earthG)" />
+            <path d="M168 140c14-9 30-6 40 4s-2 20-14 22-24-8-26-18z" fill="#22c55e" opacity="0.92" />
+            <path d="M214 196c18-4 34 6 38 20s-14 22-30 18-22-32-8-38z" fill="#16a34a" opacity="0.9" />
+            <path d="M240 128c12-2 22 8 20 18s-16 12-24 4-4-20 4-22z" fill="#84cc16" opacity="0.85" />
+            <path d="M150 190c8 6 10 18 2 24s-18 2-20-8 10-20 18-16z" fill="#0d9488" opacity="0.8" />
+            <circle cx="210" cy="170" r="82" fill="none" stroke="#ffffff" stroke-width="1.4" opacity="0.35" />
+
+            <!-- 卫星 -->
+            <g class="sat">
+              <g transform="translate(360,170)">
+                <rect x="-16" y="-9" width="32" height="18" rx="5" fill="url(#satG)" />
+                <rect x="-30" y="-5" width="13" height="10" rx="2" fill="#38bdf8" />
+                <rect x="17" y="-5" width="13" height="10" rx="2" fill="#38bdf8" />
+                <circle cx="0" cy="0" r="3.6" fill="#fff" />
+              </g>
+            </g>
+            <g class="sat" style="animation-duration:19s">
+              <g transform="translate(60,288)">
+                <circle r="4.5" fill="#8b5cf6" />
+                <circle r="9" fill="none" stroke="#8b5cf6" stroke-width="1.4" opacity="0.4" />
+              </g>
+            </g>
+            <g class="sat" style="animation-duration:30s">
+              <g transform="translate(300,46)">
+                <circle r="3.4" fill="#06b6d4" />
+                <circle r="8" fill="none" stroke="#06b6d4" stroke-width="1.2" opacity="0.45" />
+              </g>
+            </g>
+          </svg>
+
+          <div class="float-card fc-1">
+            <span>分辨率</span><b style="color: #0ea5e9">0.5m</b>
+          </div>
+          <div class="float-card fc-2">
+            <span>NDVI 均值</span><b style="color: #16a34a">0.68</b>
+          </div>
+          <div class="float-card fc-3">
+            <span>在轨卫星</span><b style="color: #8b5cf6">24</b>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== 指标卡 ===================== -->
+      <section class="stats" id="stats"></section>
+
+      <!-- ===================== 图表区 ===================== -->
+      <section id="board">
+        <div class="board">
+          <article class="card reveal">
+            <div class="card-head">
+              <div>
+                <h3>影像处理吞吐趋势</h3>
+                <p>按数据源拆分 · 鼠标悬停查看每日明细</p>
+              </div>
+              <div class="card-tools">
+                <div class="seg" id="rangeSeg">
+                  <button data-range="7">7 天</button>
+                  <button data-range="30" class="is-active">30 天</button>
+                  <button data-range="90">90 天</button>
+                </div>
+              </div>
+            </div>
+            <div class="chart-wrap" id="lineChart">
+              <div class="chart-tip" id="lineTip"></div>
+            </div>
+            <div class="legend" id="lineLegend"></div>
+          </article>
+
+          <article class="card reveal">
+            <div class="card-head">
+              <div>
+                <h3>影像质量健康度</h3>
+                <p>云量、几何与辐射定标综合评分</p>
+              </div>
+            </div>
+            <div class="donut-box">
+              <div class="donut">
+                <svg viewBox="0 0 148 148" id="donutSvg"></svg>
+                <div class="donut-label">
+                  <b class="grad-text" id="donutVal">0</b>
+                  <span>综合得分</span>
+                </div>
+              </div>
+              <div class="donut-meta" id="donutMeta"></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="board-row2">
+          <article class="card reveal">
+            <div class="card-head">
+              <div>
+                <h3>地物分类占比</h3>
+                <p>基于随机森林的监督分类结果</p>
+              </div>
+            </div>
+            <div class="bars" id="bars"></div>
+          </article>
+
+          <article class="card reveal">
+            <div class="card-head">
+              <div>
+                <h3>各卫星平台贡献</h3>
+                <p>本月入库景数（按平台）</p>
+              </div>
+            </div>
+            <div class="chart-wrap" id="barChart"></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ===================== 影像栅格 ===================== -->
+      <section id="raster">
+        <div class="section-title">
+          <h2>影像栅格 · NDVI</h2>
+          <p>归一化植被指数分布，鼠标划过查看像元值</p>
+        </div>
+        <article class="card map-card reveal">
+          <div class="map-body">
+            <div class="raster">
+              <div class="raster-meta">
+                <span>GF-6 / 2026-10-18</span>
+                <span>行列号 45°N 116°E</span>
+                <span id="cellInfo">像元 —</span>
+              </div>
+              <div class="raster-grid" id="rasterGrid"></div>
+              <div class="scanline"></div>
+            </div>
+            <aside class="map-side">
+              <h4>NDVI 色带</h4>
+              <div class="ndvi-bar"></div>
+              <div class="ndvi-scale">
+                <span>-0.2</span><span>0.2</span><span>0.5</span><span>0.9</span>
+              </div>
+              <div class="sample-list" id="sampleList"></div>
+            </aside>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== 光谱波段 ===================== -->
+      <section id="bands">
+        <div class="section-title">
+          <h2>光谱波段</h2>
+          <p>多光谱传感器的常用波段与典型用途</p>
+        </div>
+        <div class="bands" id="bandGrid"></div>
+      </section>
+
+      <!-- ===================== 采集任务 ===================== -->
+      <section id="tasks">
+        <div class="section-title">
+          <h2>影像采集任务</h2>
+          <p>最近提交的拍摄与处理工单</p>
+        </div>
+        <article class="card reveal">
+          <div class="timeline" id="timeline"></div>
+        </article>
+      </section>
+
+      <!-- ===================== 配色令牌 ===================== -->
+      <section id="palette">
+        <div class="section-title">
+          <h2>配色令牌</h2>
+          <p>点击任意色块复制色值 · 全站样式由 style.css 顶部变量驱动</p>
+        </div>
+        <article class="card reveal">
+          <div class="palette" id="paletteGrid"></div>
+        </article>
+      </section>
+    </main>
+
+    <!-- ===================== 页脚 ===================== -->
+    <footer class="footer">
+      <div class="wrap">
+        <div class="footer-bar"></div>
+        <div class="footer-inner">
+          <span>灵瞰 SkyLens · 遥感数据可视化看板 Demo</span>
+          <span>Vite + 原生 SVG，无第三方图表库</span>
+          <nav>
+            <a href="#board">总览</a>
+            <a href="#raster">栅格</a>
+            <a href="#bands">波段</a>
+            <a href="#palette">配色</a>
+          </nav>
+        </div>
+      </div>
+    </footer>
+
+    <div class="toast" id="toast"></div>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
